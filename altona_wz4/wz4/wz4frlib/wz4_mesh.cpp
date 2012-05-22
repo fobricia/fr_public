@@ -110,6 +110,14 @@ void Wz4MeshVertex::Init()
   Weight[3] = 0;
   Select = 0.0f;
   Temp = 0;
+  Selected[0] = 0.0f;
+  Selected[1] = 0.0f;
+  Selected[2] = 0.0f;
+  Selected[3] = 0.0f;
+  Selected[4] = 0.0f;
+  Selected[5] = 0.0f;
+  Selected[6] = 0.0f;
+  Selected[7] = 0.0f;
 }
 
 void Wz4MeshVertex::Init(const sVector31 &pos,sF32 u,sF32 v)
@@ -317,6 +325,14 @@ void Wz4MeshFace::Init(sInt count)
   Vertex[1] = 0;
   Vertex[2] = 0;
   Vertex[3] = 0;
+  Selected[0] = 0.0f;
+  Selected[1] = 0.0f;
+  Selected[2] = 0.0f;
+  Selected[3] = 0.0f;
+  Selected[4] = 0.0f;
+  Selected[5] = 0.0f;
+  Selected[6] = 0.0f;
+  Selected[7] = 0.0f;
 }
 
 void Wz4MeshFace::Invert()
@@ -2658,6 +2674,64 @@ ende:
   delete[] edgelink;
   delete[] map;
   delete[] centerpos;
+}
+
+/****************************************************************************/
+
+//! store or load selection for faces/vertices
+//! mode : 0=load, 1=store
+//! type : 0=vertex, 1=face
+//! slot : slot
+void Wz4Mesh::StoreLoadSel(sInt mode, sInt type, sInt slot)
+{
+  Wz4MeshFace *f;
+  Wz4MeshVertex *v;
+
+  switch(mode)
+  {
+  case wMSM_LOAD:
+    switch(type)
+    {
+    case wMST_VERTEX:
+      sFORALL(Vertices, v)
+        v->Select = v->Selected[slot];
+      // clear all faces selected
+      sFORALL(Faces,f)
+        f->Select = 0.0f;
+      break;
+
+    case wMST_FACE:
+      sFORALL(Faces, f)
+        f->Select = f->Selected[slot];
+      // clear all vertex selected
+      sFORALL(Vertices,v)
+        v->Select = 0.0f;
+      break;
+    }
+    break;
+
+  case wMSM_STORE:
+    switch(type)
+    {
+    case wMST_VERTEX:
+      sFORALL(Vertices, v)
+        v->Selected[slot] = v->Select;
+      // clear faces selection
+      sFORALL(Faces,f)
+        f->Select = 0.0f;
+      break;
+
+    case wMST_FACE:
+      sFORALL(Faces, f)
+        f->Selected[slot] = f->Select;
+      // clear all vertex selected
+      sFORALL(Vertices,v)
+        v->Select = 0.0f;
+
+      break;
+    }
+    break;
+  }
 }
 
 /****************************************************************************/
