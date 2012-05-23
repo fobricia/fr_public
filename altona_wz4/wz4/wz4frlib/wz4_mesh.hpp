@@ -50,6 +50,7 @@ struct Wz4MeshVertex
   sS16 Index[4];
   sF32 Weight[4];
   sF32 Select;
+  sF32 Selected[8];
   sInt Temp;
 
   void Init();
@@ -71,10 +72,23 @@ struct Wz4MeshFace
   sInt Cluster;
   sInt Count;
   sF32 Select;
+  sF32 Selected[8];
   sInt Vertex[4];     // vertices (CCW)
 
   void Init(sInt count);
   void Invert();
+};
+
+enum Wz4MeshSelMode
+{
+  wMSM_LOAD   = 0x00,
+  wMSM_STORE  = 0x01,
+};
+
+enum Wz4MeshSelType
+{
+  wMST_VERTEX   = 0x00,
+  wMST_FACE     = 0x01,
 };
 
 struct Wz4MeshFaceConnect
@@ -199,6 +213,11 @@ public:
   sBool DivideInChunksR(Wz4MeshFace *mf,sInt mfi,Wz4MeshFaceConnect *conn);
   sVector30 GetFaceNormal(sInt face) const;
   void CalcBBox(sAABBox &box) const;
+
+  // selection
+  void SelStoreLoad(sInt mode, sInt type, sInt slot);
+  void SelFaceToVert();
+  void SelVertToFace();
 
   /*** ops ***/
 
