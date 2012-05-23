@@ -2500,6 +2500,8 @@ found1b:
     }
   }
 
+
+
   // move original points
 
   for(sInt i=0;i<maxvert;i++)
@@ -2607,6 +2609,11 @@ found1b:
           nf->Vertex[3] = e->SplitVertA;
         else
           nf->Vertex[3] = e->SplitVertB;
+
+        // update new faces selection in slots
+        for(int i=0; i<8; i++)
+          nf->Selected[i] = f->Selected[i];
+
         nf++;
       }
 
@@ -2648,6 +2655,11 @@ found1b:
           nf->Vertex[0] = sv[(sg    )%sc];
           nf->Vertex[1] = sv[(sg+j+1)%sc];
           nf->Vertex[2] = sv[(sg+j+2)%sc];
+
+          // update new faces selection in slots
+          for(int i=0; i<8; i++)
+            nf->Selected[i] = f->Selected[i];
+
           nf++;
         }
         f->Count = 0;
@@ -2678,11 +2690,55 @@ ende:
 
 /****************************************************************************/
 
-//! store or load selection for faces/vertices
-//! mode : 0=load, 1=store
-//! type : 0=vertex, 1=face
-//! slot : slot
-void Wz4Mesh::StoreLoadSel(sInt mode, sInt type, sInt slot)
+void Wz4Mesh::SelVertToFace()
+{
+    Wz4MeshVertex *vp;
+    Wz4MeshFace *face;
+
+    sInt pc = Vertices.GetCount();
+    sF32 *fsel = new sF32[pc];
+
+    sFORALL(Vertices,vp)
+      fsel[_i] = vp->Select;
+
+    sFORALL(Faces,face)
+    {
+      sInt n = 0;
+      for(sInt i=0;i<face->Count;i++)
+        n += (fsel[face->Vertex[i]]>=0.5f)?1:0;
+      face->Select = (n==face->Count)?1.0f:0.0f;
+    }
+}
+
+/****************************************************************************/
+
+void Wz4Mesh::SelFaceToVert()
+{
+  Wz4MeshVertex *vp;
+  Wz4MeshFace *face;
+
+  sInt pc = Vertices.GetCount();
+  sF32 *fsel = new sF32[pc];
+
+  for(sInt i=0;i<pc;i++)
+    fsel[i] = 0.0f;
+
+  sFORALL(Faces,face)
+  {
+    if(face->Select>0.0f)
+    {
+      for(sInt i=0;i<face->Count;i++)
+        fsel[face->Vertex[i]]=face->Select;
+    }
+  }
+
+  sFORALL(Vertices,vp)
+    vp->Select = fsel[_i];
+}
+
+/****************************************************************************/
+
+void Wz4Mesh::SelStoreLoad(sInt mode, sInt type, sInt slot)
 {
   Wz4MeshFace *f;
   Wz4MeshVertex *v;
@@ -2727,7 +2783,6 @@ void Wz4Mesh::StoreLoadSel(sInt mode, sInt type, sInt slot)
       // clear all vertex selected
       sFORALL(Vertices,v)
         v->Select = 0.0f;
-
       break;
     }
     break;
@@ -6417,6 +6472,11 @@ void Wz4Mesh::SplitGenFace(sInt base,const sInt *verts,sInt count,sBool reuseBas
     out->Cluster = Faces[base].Cluster;
     out->Count  = count;
     out->Select = Faces[base].Select;
+
+    // update new faces selection in slots
+    for(int i=0; i<8; i++)
+      out->Selected[i] = Faces[base].Selected[i];
+
     for(sInt i=0;i<count;i++)
       out->Vertex[i] = verts[i];
   }
@@ -6425,6 +6485,11 @@ void Wz4Mesh::SplitGenFace(sInt base,const sInt *verts,sInt count,sBool reuseBas
     out->Cluster = Faces[base].Cluster;
     out->Count = 4;
     out->Select = Faces[base].Select;
+
+    // update new faces selection in slots
+    for(int i=0; i<8; i++)
+      out->Selected[i] = Faces[base].Selected[i];
+
     for(sInt i=0;i<4;i++)
       out->Vertex[i] = verts[i];
 
@@ -6432,6 +6497,11 @@ void Wz4Mesh::SplitGenFace(sInt base,const sInt *verts,sInt count,sBool reuseBas
     out->Cluster = Faces[base].Cluster;
     out->Count = 3;
     out->Select = Faces[base].Select;
+
+    // update new faces selection in slots
+    for(int i=0; i<8; i++)
+      out->Selected[i] = Faces[base].Selected[i];
+
     out->Vertex[0] = verts[0];
     out->Vertex[1] = verts[count-2];
     out->Vertex[2] = verts[count-1];

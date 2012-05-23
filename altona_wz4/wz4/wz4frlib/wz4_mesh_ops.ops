@@ -661,13 +661,20 @@ operator Wz4Mesh Triangulate(Wz4Mesh)
         nfp->Vertex[0] = fp->Vertex[0];
         nfp->Vertex[1] = fp->Vertex[1];
         nfp->Vertex[2] = fp->Vertex[2];
+        // update new faces selection in slots
+        for(int i=0; i<8; i++)
+          nfp->Selected[i] = fp->Selected[i];
         nfp++;
+
         nfp->Init(3);
         nfp->Select = fp->Select;
         nfp->Cluster = fp->Cluster;
         nfp->Vertex[0] = fp->Vertex[0];
         nfp->Vertex[1] = fp->Vertex[2];
         nfp->Vertex[2] = fp->Vertex[3];
+        // update new faces selection in slots
+        for(int i=0; i<8; i++)
+          nfp->Selected[i] = fp->Selected[i];
         nfp++;
       }
     }
@@ -1618,18 +1625,18 @@ operator Wz4Mesh Select(Wz4Mesh,?GenBitmap)
 
     // load slot
     if(((para->Flags&0x1c0)==0x1c0))
-      out->StoreLoadSel(wMSM_LOAD,type,para->InputSlot);
+      out->SelStoreLoad(wMSM_LOAD,type,para->InputSlot);
 
     // store slot
     if(((para->Flags&0x1c0)!=0x1c0) && para->OutputSlot>0)
-        out->StoreLoadSel(wMSM_STORE,type,para->OutputSlot-1);
+      out->SelStoreLoad(wMSM_STORE,type,para->OutputSlot-1);
 
     delete[] fsel;
   }
 
   handles
   {
-    if(((para->Flags&0x1c0)!=0x1c0))
+    if(((para->Flags&0x1c0)!=0x1c0))	// no handles when input == slot
     {
       sSRT srt;
       sMatrix34 mat;

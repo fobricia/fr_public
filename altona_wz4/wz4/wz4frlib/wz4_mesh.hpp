@@ -215,7 +215,9 @@ public:
   void CalcBBox(sAABBox &box) const;
 
   // selection
-    void StoreLoadSel(sInt mode, sInt type, sInt slot);
+  void SelStoreLoad(sInt mode, sInt type, sInt slot);
+  void SelFaceToVert();
+  void SelVertToFace();
 
   /*** ops ***/
 
