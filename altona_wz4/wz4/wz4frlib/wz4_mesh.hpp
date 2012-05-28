@@ -50,7 +50,6 @@ struct Wz4MeshVertex
   sS16 Index[4];
   sF32 Weight[4];
   sF32 Select;
-  sF32 Selected[8];
   sInt Temp;
 
   void Init();
@@ -72,11 +71,17 @@ struct Wz4MeshFace
   sInt Cluster;
   sInt Count;
   sF32 Select;
-  sF32 Selected[8];
   sInt Vertex[4];     // vertices (CCW)
 
   void Init(sInt count);
   void Invert();
+};
+
+
+struct Wz4MeshSel
+{
+  sInt Id;
+  sF32 Selected;
 };
 
 enum Wz4MeshSelMode
@@ -127,6 +132,8 @@ class Wz4Mesh : public wObject
 public:
   sArray<Wz4MeshVertex> Vertices;
   sArray<Wz4MeshFace> Faces;
+  sArray<Wz4MeshSel> SelFaces[8];     // stored faces selection
+  sArray<Wz4MeshSel> SelVertices[8];  // stored vertices selection
   sArray<Wz4MeshCluster *> Clusters;
   Wz4Skeleton *Skeleton;
   sArray<Wz4ChunkPhysics> Chunks; // alternative to skeleton: just unconnected chunks (debris-style)#

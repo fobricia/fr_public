@@ -661,9 +661,6 @@ operator Wz4Mesh Triangulate(Wz4Mesh)
         nfp->Vertex[0] = fp->Vertex[0];
         nfp->Vertex[1] = fp->Vertex[1];
         nfp->Vertex[2] = fp->Vertex[2];
-        // update new faces selection in slots
-        for(int i=0; i<8; i++)
-          nfp->Selected[i] = fp->Selected[i];
         nfp++;
 
         nfp->Init(3);
@@ -672,9 +669,6 @@ operator Wz4Mesh Triangulate(Wz4Mesh)
         nfp->Vertex[0] = fp->Vertex[0];
         nfp->Vertex[1] = fp->Vertex[2];
         nfp->Vertex[2] = fp->Vertex[3];
-        // update new faces selection in slots
-        for(int i=0; i<8; i++)
-          nfp->Selected[i] = fp->Selected[i];
         nfp++;
       }
     }
