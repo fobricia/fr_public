@@ -2686,6 +2686,10 @@ void Wz4Mesh::SelStoreLoad(sInt mode, sInt type, sInt slot)
     switch(type)
     {
     case wMST_VERTEX:
+      // clear vertices selection
+      sFORALL(Vertices,v)
+        v->Select = 0.0f;
+
       // read all vertices stored and set selection
       for(int i=0; i<SelVertices[slot].GetCount(); i++)
         Vertices[SelVertices[slot][i].Id].Select = SelVertices[slot][i].Selected;
@@ -2700,6 +2704,8 @@ void Wz4Mesh::SelStoreLoad(sInt mode, sInt type, sInt slot)
       {
         if((f->Selected & (1 << slot)) > 0)
           f->Select = 1;
+        else
+          f->Select = 0;
       }
 
       // clear vertices selection
@@ -3485,7 +3491,7 @@ void Wz4Mesh::Dual(Wz4Mesh *in,sF32 random)
 
 /****************************************************************************/
 
-sBool Wz4Mesh::DivideInChunksR(Wz4MeshFace *mf,sInt mfi,Wz4MeshFaceConnect *conn)
+sBool Wz4Mesh::DivideInChunksR(Wz4MeshFaceEx *mf,sInt mfi,Wz4MeshFaceConnect *conn)
 {
   sVERIFY(mf->Select>=0.0f);
   for(sInt i=0;i<mf->Count;i++)
@@ -3501,7 +3507,7 @@ sBool Wz4Mesh::DivideInChunksR(Wz4MeshFace *mf,sInt mfi,Wz4MeshFaceConnect *conn
     if(conn[mfi].Adjacent[i]>=0)
     {
       sInt fi = conn[mfi].Adjacent[i]/4;
-      Wz4MeshFace *f = &Faces[fi];
+      Wz4MeshFaceEx *f = &FacesEx[fi];
       if(f->Select<0.0f)
       {
         f->Select = mf->Select;
@@ -3518,22 +3524,34 @@ sBool Wz4Mesh::DivideInChunksR(Wz4MeshFace *mf,sInt mfi,Wz4MeshFaceConnect *conn
 
 sBool Wz4Mesh::DivideInChunks(sInt flags,const sVector30 &normal,const sVector30 &rot)
 {
-  Wz4MeshFace *mf;
+  Wz4MeshFace *f;
+  Wz4MeshFace face;
+  Wz4MeshFaceEx fx;
+  Wz4MeshFaceEx *mf;
   Wz4MeshVertex *mv;
   Wz4MeshCluster *cl;
   Wz4ChunkPhysics *ch;
 
   MergeVertices();
 
+  // copy Faces into extended stucture
+  FacesEx.Clear();
+  sFORALL(Faces,f)
+  {
+    sVERIFY(f->Cluster>=0 && f->Cluster<Clusters.GetCount());
+    fx.Cluster = f->Cluster;
+    fx.Count = f->Count;
+    fx.Select = -1.0f;
+    for(sInt i=0; i<f->Count; i++)
+      fx.Vertex[i] = f->Vertex[i];
+    FacesEx.AddTail(fx);
+  }
+
+
   // find connectd clusters
 
   Wz4MeshFaceConnect *conn = Adjacency();
 
-  sFORALL(Faces,mf)
-  {
-    mf->Select = -1.0f;
-    sVERIFY(mf->Cluster>=0 && mf->Cluster<Clusters.GetCount());
-  }
   sFORALL(Vertices,mv)
     mv->Select = -1.0f;
 
@@ -3541,7 +3559,7 @@ sBool Wz4Mesh::DivideInChunks(sInt flags,const sVector30 &normal,const sVector30
   sFORALL(Clusters,cl)
   {
     sInt cli = _i;
-    sFORALL(Faces,mf)
+    sFORALL(FacesEx,mf)
     {
       if(mf->Cluster==cli && mf->Select<0.0f)
       {
@@ -3557,7 +3575,7 @@ sBool Wz4Mesh::DivideInChunks(sInt flags,const sVector30 &normal,const sVector30
 
   delete[] conn;
 
-  sFORALL(Faces,mf)
+  sFORALL(FacesEx,mf)
     for(sInt i=0;i<mf->Count;i++)
       sVERIFY(Vertices[mf->Vertex[i]].Select>=0.0f);
   sFORALL(Vertices,mv)
@@ -3565,7 +3583,7 @@ sBool Wz4Mesh::DivideInChunks(sInt flags,const sVector30 &normal,const sVector30
 
   // sort faces by cluster
 
-  sIntroSort(sAll(Faces),sMemberLess(&Wz4MeshFace::Select));
+  sIntroSort(sAll(FacesEx),sMemberLess(&Wz4MeshFaceEx::Select));
 
   // reorganize vertices
 
@@ -3575,7 +3593,7 @@ sBool Wz4Mesh::DivideInChunks(sInt flags,const sVector30 &normal,const sVector30
   sInt *remap = new sInt[Vertices.GetCount()];
   sFORALL(Vertices,mv)
     remap[mv->Temp] = _i;
-  sFORALL(Faces,mf)
+  sFORALL(FacesEx,mf)
     for(sInt i=0;i<mf->Count;i++)
       mf->Vertex[i] = remap[mf->Vertex[i]];
   delete[] remap;
@@ -3627,7 +3645,7 @@ sBool Wz4Mesh::DivideInChunks(sInt flags,const sVector30 &normal,const sVector30
 
   // find first face
 
-  sFORALL(Faces,mf)
+  sFORALL(FacesEx,mf)
   {
     if(Chunks[(sInt)mf->Select].FirstIndex==-1)
     {
@@ -3666,8 +3684,20 @@ sBool Wz4Mesh::DivideInChunks(sInt flags,const sVector30 &normal,const sVector30
     }
   }
   
-  sFORALL(Faces,mf)
-    mf->Select = 0.0f;
+  // copy FacesEx to Faces and clear FacesEx - no more used
+  Faces.Clear();
+  sFORALL(FacesEx,mf)
+  {
+    face.Cluster = mf->Cluster;
+    face.Count = mf->Count;
+    face.Select = 0;
+    face.Selected = 0;
+    for(sInt i=0; i<mf->Count; i++)
+      face.Vertex[i] = mf->Vertex[i];
+    Faces.AddTail(face);
+  }
+  FacesEx.Clear();
+
   sFORALL(Vertices,mv)
     mv->Select = 0.0f;
   SplitClustersChunked(74);
