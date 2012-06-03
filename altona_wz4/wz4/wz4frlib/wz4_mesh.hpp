@@ -79,6 +79,14 @@ struct Wz4MeshFace
   void Invert();
 };
 
+struct Wz4MeshFaceEx  // Extended structure - only used for chunks calculation
+{
+  sInt Cluster;
+  sU8 Count;
+  sF32 Select;
+  sInt Vertex[4];
+};
+
 struct Wz4MeshSel
 {
   sU32 Id;            // element ID
@@ -133,6 +141,7 @@ class Wz4Mesh : public wObject
 public:
   sArray<Wz4MeshVertex> Vertices;
   sArray<Wz4MeshFace> Faces;
+  sArray<Wz4MeshFaceEx> FacesEx;      // temporaly used for chunks calculation
   sArray<Wz4MeshSel> SelVertices[8];  // stored vertices selection in slots
   sArray<Wz4MeshCluster *> Clusters;
   Wz4Skeleton *Skeleton;
@@ -217,7 +226,7 @@ public:
 
   // helpers for ops
 
-  sBool DivideInChunksR(Wz4MeshFace *mf,sInt mfi,Wz4MeshFaceConnect *conn);
+  sBool DivideInChunksR(Wz4MeshFaceEx *mf,sInt mfi,Wz4MeshFaceConnect *conn);
   sVector30 GetFaceNormal(sInt face) const;
   void CalcBBox(sAABBox &box) const;
 
