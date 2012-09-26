@@ -3366,6 +3366,8 @@ RPFromVertex::~RPFromVertex()
 
 void RPFromVertex::Init(Wz4Mesh *mesh)
 {
+  sArray<sVector31> ListVertices;
+  sVector31 * pos;
   Wz4MeshVertex * vp;
   Para = ParaBase;
   sRandom rnd;
@@ -3373,12 +3375,20 @@ void RPFromVertex::Init(Wz4Mesh *mesh)
 
   sVERIFY(mesh != 0);
 
+  // get unique vertices of input mesh
   sFORALL(mesh->Vertices, vp)
+  {
+    if(!sContains(ListVertices, vp->Pos))
+      ListVertices.AddTail(vp->Pos);
+  }
+
+  // create a particle at each vertex pos
+  sFORALL(ListVertices, pos)
   {
     if (rnd.Float(1)<=Para.Random)
     {
       Part *p = Parts.AddMany(1);
-      p->Pos.Init(vp->Pos.x, vp->Pos.y, vp->Pos.z);
+      p->Pos = *pos;
     }
   }
 }
