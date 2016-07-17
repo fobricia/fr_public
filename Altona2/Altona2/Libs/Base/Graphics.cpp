@@ -8,7 +8,6 @@
 
 #include "Altona2/Libs/Base/Base.hpp"
 #include "Altona2/Libs/Base/SystemPrivate.hpp"
-#include "Altona2/Libs/Base/FixedShader.hpp"
 
 /****************************************************************************/
 
