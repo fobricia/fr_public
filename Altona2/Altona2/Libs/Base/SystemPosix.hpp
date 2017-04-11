@@ -52,6 +52,21 @@ protected:
 
 /****************************************************************************/
 
+namespace Private {
+
+enum sMouseLockId
+{
+    sMLI_None = 0,
+    sMLI_Mouse,
+};
+
+bool AquireMouseLock(sMouseLockId mouselockid);
+bool TestMouseLock(sMouseLockId mouselockid);
+void ReleaseMouseLock(sMouseLockId mouselockid);
+}
+
+/****************************************************************************/
+
 #endif  // sConfigPlatform==sConfigPlatformLinux || sConfigPlatform==sConfigPlatformOSX || sConfigPlatform==sConfigPlatformIOS
 
 }
