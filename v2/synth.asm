@@ -8,8 +8,26 @@
 
 %ifdef WIN32
 %define PUBLIC_FN(x,n) _ %+ x @ %+ n
+%macro export_fn 2
+global _%1@%2
+_%1@%2:
+%endmacro
 %else
 %define PUBLIC_FN(x,n) n
+%macro export_fn 2
+global %1
+%1:
+%endmacro
+%endif
+
+%ifdef WIN32
+%define SECT_BSS(name) section .bss
+%define SECT_DATA(name) section .data
+%define SECT_TEXT(name) section .text
+%else
+%define SECT_BSS(n) section .bss. %+ n nobits alloc noexec write
+%define SECT_DATA(n) section .data. %+ n progbits alloc noexec write
+%define SECT_TEXT(n) section .text. %+ n progbits alloc exec nowrite
 %endif
 
 %define		POLY			64  							 ; maximum polyphony
@@ -29,7 +47,7 @@
 icnoisemul equ 196314165
 icnoiseadd equ 907633515
 
-section .bss
+SECT_BSS(v2)
 
 this        resd 1
 temp				resd 16
@@ -46,7 +64,7 @@ SRcFrameSize    resd 1
 SRfciframe			resd 1
 SRfcdcfilter    resd 1
 
-section .data
+SECT_DATA(v2_aux)
 
 global _AUX_
 _AUX_
@@ -223,7 +241,7 @@ V2PerfCounter:
 ;  Helper Routines    
 ;#####################################################################################
 
-section .text
+SECT_TEXT(v2_helpers)
 
 ; global fastatan
 
@@ -465,11 +483,11 @@ struc V2Sample  ; keep this in sync with samples.h!
 endstruc
 %endif
 
-section .data
+SECT_DATA(v2_oscseeds)
 
 oscseeds dd 0xdeadbeef ,0xbaadf00d ,0xd3adc0de
 
-section .text
+SECT_TEXT(v2_osccode)
 
 syOscInit:      ; ecx: osc index for noise seed
         pushad
@@ -550,12 +568,12 @@ syOscSet:
 ; ecx: # of samples
 ; ebp: workspace
 
-section .data
+SECT_DATA(v2_oscjtab)
 
 oscjtab dd syOscRender.off, syOscRender.mode0, syOscRender.mode1, syOscRender.mode2, 
                 dd syOscRender.mode3, syOscRender.mode4, syOscRender.auxa, syOscRender.auxb
 
-section .text
+SECT_TEXT(v2_oscrender)
 
 syOscRender:
         pushad
@@ -566,7 +584,7 @@ syOscRender:
         and			al, 7
         jmp			dword [oscjtab + 4*eax]
 
-section .data
+SECT_DATA(v2_osctab2)
 
 .m0casetab   dd syOscRender.m0c2,     ; ... 
              dd syOscRender.m0c1,     ; ..n , INVALID!
@@ -577,7 +595,7 @@ section .data
              dd syOscRender.m0c2,     ; oc. , INVALID!
              dd syOscRender.m0c121    ; ocn
 
-section .text
+SECT_TEXT(v2_osc2)
 
 .mode0     ; tri/saw
         mov		eax, [ebp + syWOsc.cnt]
@@ -734,7 +752,7 @@ section .text
     ret
 
 
-section .data
+SECT_DATA(v2_osctab3)
 
 
 .m1casetab   dd syOscRender.m1c2,     ; ... 
@@ -746,7 +764,7 @@ section .data
              dd syOscRender.m1c2,     ; oc. , INVALID!
              dd syOscRender.m1c121    ; ocn
 
-section .text
+SECT_TEXT(v2_osc3)
 
 .mode1     ; pulse
         mov		eax, [ebp + syWOsc.cnt]
@@ -1035,6 +1053,8 @@ section .text
 ;#####################################################################################
 
 
+SECT_TEXT(v2_env)
+
 global _ENV_
 _ENV_
 
@@ -1126,12 +1146,12 @@ syEnvSet:
 ; epb: workspace
 ; ATTENTION: eax: gate
 
-section .data
+SECT_DATA(v2_ettab)
 
 syETTab		dd syEnvTick.state_off, syEnvTick.state_atk, syEnvTick.state_dec,
                   dd syEnvTick.state_sus, syEnvTick.state_rel
-                  
-section .text
+
+SECT_TEXT(v2_envtick)
 
 syEnvTick:
         pushad
@@ -1344,13 +1364,13 @@ syFltSet:
     ret
     
 
-section .data
+SECT_DATA(v2_frtab)
 
 syFRTab	dd syFltRender.mode0, syFltRender.mode1, syFltRender.mode2
                 dd syFltRender.mode3, syFltRender.mode4, syFltRender.mode5
                 dd syFltRender.modemlo, syFltRender.modemhi
 
-section .text
+SECT_TEXT(v2_flt)
 
 ; ebp: workspace
 ; ecx: count
@@ -1663,12 +1683,12 @@ syLFOKeyOn
     ret
 
 
-section .data
+SECT_DATA(v2_lttab)
 
 syLTTab		dd syLFOTick.mode0, syLFOTick.mode1, syLFOTick.mode2, syLFOTick.mode3
                   dd syLFOTick.mode4, syLFOTick.mode0, syLFOTick.mode0, syLFOTick.mode0
-                  
-section .text
+
+SECT_TEXT(v2_lfo)
 
 syLFOTick
   pushad
@@ -1802,14 +1822,14 @@ syDistInit:
         popad
         ret
 
-section .data
+SECT_DATA(v2_dstab)
 
 syDSTab			dd syDistSet.mode0, syDistSet.mode1, syDistSet.mode2, syDistSet.mode3, syDistSet.mode4
                         dd syDistSet.modeF, syDistSet.modeF, syDistSet.modeF, syDistSet.modeF, syDistSet.modeF
                         dd syDistSet.modeF, syDistSet.modeF, syDistSet.modeF, syDistSet.modeF, syDistSet.modeF
                         dd syDistSet.modeF
 
-section .text
+SECT_TEXT(v2_dist)
 
 syDistSet:
         pushad
@@ -1901,14 +1921,14 @@ syDistSet:
     lea     ebp, [ebp + syWDist.fw2 - syWDist.fw1]
     jmp     syFltSet
 
-section .data
+SECT_DATA(v2_drmtab)
 
 syDRMTab		dd syDistRenderMono.mode0, syDistRenderMono.mode1, syDistRenderMono.mode2, syDistRenderMono.mode3
                         dd syDistRenderMono.mode4, syDistRenderMono.modeF, syDistRenderMono.modeF, syDistRenderMono.modeF
             dd syDistRenderMono.modeF, syDistRenderMono.modeF, syDistRenderMono.modeF, syDistRenderMono.modeF
             dd syDistRenderMono.modeF, syDistRenderMono.modeF, syDistRenderMono.modeF, syDistRenderMono.modeF
 
-section .text
+SECT_TEXT(v2_distrender2)
 
 ; esi : sourceptr
 ; edi : destptr
@@ -2016,21 +2036,21 @@ syDistRenderMono:
   mov [ebp + syWDist.dvall], eax
   ret
 
-                  
+
 
 .modeF ; filters
   lea   ebp, [ebp + syWDist.fw1]
   jmp   syFltRender
 
-section .data					
+SECT_DATA(v2_drstab)
 
 syDRSTab		dd syDistRenderMono.mode0, syDistRenderMono.mode1, syDistRenderMono.mode2, syDistRenderMono.mode3
                         dd syDistRenderStereo.mode4, syDistRenderStereo.modeF, syDistRenderStereo.modeF, syDistRenderStereo.modeF
             dd syDistRenderStereo.modeF, syDistRenderStereo.modeF, syDistRenderMono.modeF, syDistRenderMono.modeF
             dd syDistRenderMono.modeF, syDistRenderMono.modeF, syDistRenderMono.modeF, syDistRenderMono.modeF
-        
-section .text		
-        
+
+SECT_TEXT(v2_distrender3)
+
 syDistRenderStereo:
     pushad
     V2PerfEnter V2Perf_DIST
@@ -2611,7 +2631,7 @@ syV2NoteOff:
     ret
 
 
-section .data
+SECT_DATA(v2_vtab)
 
 ; table for mod sources
 sVTab   dd		syWV2.aenv + syWEnv.out
@@ -2619,7 +2639,7 @@ sVTab   dd		syWV2.aenv + syWEnv.out
                 dd    syWV2.lfo1 + syWLFO.out
                 dd    syWV2.lfo2 + syWLFO.out
 
-section .text
+SECT_TEXT(v2_storeval)
 
 
 
@@ -2742,6 +2762,8 @@ storeV2Values:  ; ebp: pointer auf globals / edx: voice
 ; Bass, Bass, wir brauchen Bass
 ; BASS BOOST (fixed low shelving EQ)
 ;#####################################################################################
+
+SECT_TEXT(v2_bassboost)
 
 global _BASS_
 _BASS_
@@ -3608,11 +3630,11 @@ syCompProcChannel:
   ret
 ; on exit: [temp] = new dline count
 
-section .data
+SECT_DATA(v2_crmtab)
 
 syCRMTab		dd syCompLDMonoPeak, syCompLDMonoRMS, syCompLDStereoPeak, syCompLDStereoRMS
 
-section .text
+SECT_TEXT(v2_comprender)
 
 ; esi: input/output buffer
 ; ecx: # of samples
@@ -3702,6 +3724,8 @@ syCompRender:
 ;#
 ;#####################################################################################
 
+SECT_TEXT(v2_egreverb)
+
 ; lengths of delay lines in samples
 lencl0 	equ 1309    		; left comb filter delay 0
 lencl1	equ 1635		; left comb filter delay 1
@@ -3785,17 +3809,17 @@ struc syWReverb
  .size
 endstruc
 
-section .data
+SECT_DATA(v2_rvdefs)
 
 ; see struct above
 syRvDefs  dd 0.966384599, 0.958186359, 0.953783929, 0.950933178, 0.994260075, 0.998044717
                 dd 1.0  ; input gain
                     dd 0.8	; high cut
 
-section .text
+SECT_DATA(v2_reverb2)
 
 
-syReverbInit	
+syReverbInit
     pushad
     xor    eax, eax
     mov    ecx, syWReverb.size
@@ -4121,6 +4145,8 @@ syReverbProcess
 ; Oberdings
 ; CHANNELS RULEN
 ;#####################################################################################
+
+SECT_TEXT(v2_channels)
 
 global _V2CHAN_
 _V2CHAN_
@@ -4575,6 +4601,8 @@ storeChanValues:  ; ebx: channel, ebp: globals
 
 %ifdef RONAN
 
+SECT_TEXT(v2_ronan)
+
 global _RONAN_
 _RONAN_
 
@@ -4767,10 +4795,9 @@ endstruc
 ;-------------------------------------------------------------------------------------
 ; Init
 
-section .text
+SECT_TEXT(v2_synthinit)
 
-global PUBLIC_FN(synthInit,12)
-PUBLIC_FN(synthInit,12):
+export_fn synthInit,12
         pushad
 
     mov ebp, [esp+36]
@@ -4859,11 +4886,9 @@ PUBLIC_FN(synthInit,12):
 
 
 
-section .text
+SECT_TEXT(v2_synthrender)
 
-
-global PUBLIC_FN(synthRender,20)
-PUBLIC_FN(synthRender,20):
+export_fn synthRender,20
         pushad
 
     mov ebp, [esp+36]
@@ -5303,11 +5328,11 @@ PUBLIC_FN(synthRender,20):
 ; ------------------------------------------------------------------------
 ; PROCESS MIDI MESSAGES
 
+SECT_DATA(v2_midi_mtab)
+
 global _MIDI_
 _MIDI_
 
-
-section .data
 
 spMTab dd ProcessNoteOff
              dd ProcessNoteOn
@@ -5318,11 +5343,10 @@ spMTab dd ProcessNoteOff
              dd ProcessPitchBend
              dd ProcessRealTime
 
-section .text
+SECT_TEXT(v2_processmidi)
 
 
-global PUBLIC_FN(synthProcessMIDI,8)
-PUBLIC_FN(synthProcessMIDI,8):
+export_fn synthProcessMIDI,8
   pushad
   
   mov ebp, [esp+36]
@@ -5372,6 +5396,7 @@ PUBLIC_FN(synthProcessMIDI,8):
 ; ------------------------------------------------------------------------
 ; Note Off
 
+SECT_TEXT(v2_noteoff)
 
 ProcessNoteOff:
     movzx edi, byte [esi]  ; Note
@@ -5416,6 +5441,8 @@ ProcessNoteOff:
 
 ; ------------------------------------------------------------------------
 ; Note On
+
+SECT_TEXT(v2_noteon)
 
 ProcessNoteOn:
   ; auf noteoff checken
@@ -5571,6 +5598,7 @@ ProcessNoteOn:
 ; ------------------------------------------------------------------------
 ; Aftertouch
 
+SECT_TEXT(v2_aftertouch)
 
 ProcessChannelPressure:
   add esi, byte 1
@@ -5580,6 +5608,7 @@ ProcessChannelPressure:
 ; ------------------------------------------------------------------------
 ; Control Change
 
+SECT_TEXT(v2_controlchange)
 
 ProcessControlChange:
   movzx eax, byte [esi]
@@ -5685,6 +5714,7 @@ ProcessControlChange:
 ; ------------------------------------------------------------------------
 ; Program change
 
+SECT_TEXT(v2_programchange)
 
 ProcessProgramChange:
   ; check ob selbes program
@@ -5721,6 +5751,8 @@ ProcessProgramChange:
 ; ------------------------------------------------------------------------
 ; Pitch Bend
 
+SECT_TEXT(v2_pitchbend)
+
 ProcessPitchBend:
   add esi, byte 2
     ret
@@ -5728,6 +5760,8 @@ ProcessPitchBend:
 
 ; ------------------------------------------------------------------------
 ; Poly Aftertouch
+
+SECT_TEXT(v2_polypressure)
 
 ProcessPolyPressure:   ; unsupported
   add esi, byte 2
@@ -5737,6 +5771,8 @@ ProcessPolyPressure:   ; unsupported
 ; ------------------------------------------------------------------------
 ; Realtime/System messages
 
+
+SECT_TEXT(v2_procrealtime)
 
 ProcessRealTime:
 %ifdef FULLMIDI
@@ -5759,8 +5795,9 @@ ProcessRealTime:
 ; Noch wichtiger.
 
 
-global PUBLIC_FN(synthSetGlobals,8)
-PUBLIC_FN(synthSetGlobals,8)
+SECT_TEXT(v2_setglobals)
+
+export_fn synthSetGlobals,8
     pushad
     
     mov   ebp, [esp+36]
@@ -5812,8 +5849,9 @@ PUBLIC_FN(synthSetGlobals,8)
 ; ------------------------------------------------------------------------
 ; sampler init
 
-global PUBLIC_FN(synthSetSampler,12)
-PUBLIC_FN(synthSetSampler,12):
+SECT_TEXT(v2_samplerinit)
+
+export_fn synthSetSampler,12
 %if SAMPLER
   pushad
     mov   ebp, [esp+36]
@@ -5830,8 +5868,9 @@ PUBLIC_FN(synthSetSampler,12):
 
 %ifdef VUMETER
 
-global PUBLIC_FN(synthSetVUMode,8)
-PUBLIC_FN(synthSetVUMode,8):
+SECT_TEXT(v2_vumeter)
+
+export_fn synthSetVUMode,12
   pushad
   mov ebp, [esp + 36]
   mov eax, [esp + 40]
@@ -5840,8 +5879,7 @@ PUBLIC_FN(synthSetVUMode,8):
   ret 8
   
 
-global PUBLIC_FN(synthGetChannelVU,16)
-PUBLIC_FN(synthGetChannelVU,16):
+export_fn synthGetChannelVU,16
   pushad
   mov  ebp, [esp + 36]
   mov  ecx, [esp + 40]
@@ -5854,8 +5892,7 @@ PUBLIC_FN(synthGetChannelVU,16):
   popad
   ret 16
 
-global PUBLIC_FN(synthGetMainVU,12)
-PUBLIC_FN(synthGetMainVU,12):
+export_fn synthGetMainVU,12
   pushad
   mov  ebp, [esp + 36]
   mov  esi, [esp + 40]
@@ -5873,9 +5910,9 @@ PUBLIC_FN(synthGetMainVU,12):
 ; ------------------------------------------------------------------------
 ; Debugkram
 
-global PUBLIC_FN(synthGetPoly,8)
+SECT_TEXT(v2_debugstuff)
 
-PUBLIC_FN(synthGetPoly,8):
+export_fn synthGetPoly,8
   pushad
     mov ecx, 17
     mov ebp, [esp + 36]
@@ -5899,9 +5936,7 @@ PUBLIC_FN(synthGetPoly,8):
     ret 8
 
 
-global PUBLIC_FN(synthGetPgm,8)
-
-PUBLIC_FN(synthGetPgm,8):
+export_fn synthGetPgm,8
   pushad
     mov ebp, [esp + 36]
     mov edi, [esp + 40]
@@ -5917,19 +5952,16 @@ PUBLIC_FN(synthGetPgm,8):
     popad
     ret 8
 
-global PUBLIC_FN(synthGetSize,0)
-PUBLIC_FN(synthGetSize,0):
+export_fn synthGetSize,0
   mov eax, SYN.size
   ret
 
-global PUBLIC_FN(synthGetFrameSize,4)
-PUBLIC_FN(synthGetFrameSize,4):
+export_fn synthGetFrameSize,4
   mov eax, [SRcFrameSize]
   ret 4
   
 %ifdef RONAN
-global PUBLIC_FN(synthGetSpeechMem,4)
-PUBLIC_FN(synthGetSpeechMem,4):
+export_fn synthGetSpeechMem,4
   mov eax, [esp+4]
   add eax, SYN.ronanw
   ret 4
