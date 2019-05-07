@@ -15,7 +15,7 @@
 
 %define   VUMETER
 %define   V2PROFILER 0                 ; profiling support. refer to tinyplayer
-%define		RONAN
+;%define		RONAN
 %define   FULLMIDI
 
 %define   SAMPLER 0
@@ -4574,13 +4574,13 @@ storeChanValues:  ; ebx: channel, ebp: globals
 global _RONAN_
 _RONAN_
 
-extern _ronanCBInit@4
-extern _ronanCBTick@4
-extern _ronanCBNoteOn@4
-extern _ronanCBNoteOff@4
-extern _ronanCBSetCtl@12
-extern _ronanCBProcess@12
-extern _ronanCBSetSR@8
+extern ronanCBInit
+extern ronanCBTick
+extern ronanCBNoteOn
+extern ronanCBNoteOff
+extern ronanCBSetCtl
+extern ronanCBProcess
+extern ronanCBSetSR
 
 ; ebp: this
 syRonanInit
@@ -4588,7 +4588,7 @@ syRonanInit
     mov  eax, [this]
     add  eax, SYN.ronanw
     push eax
-    call _ronanCBInit@4
+    call ronanCBInit
     popad
     ret
 
@@ -4598,7 +4598,7 @@ syRonanNoteOn
     mov  eax, [this]
     add  eax, SYN.ronanw
     push eax
-    call _ronanCBNoteOn@4
+    call ronanCBNoteOn
     popad
     ret
 
@@ -4608,7 +4608,7 @@ syRonanNoteOff
     mov  eax, [this]
     add  eax, SYN.ronanw
     push eax
-    call _ronanCBNoteOff@4
+    call ronanCBNoteOff
     popad
     ret
 
@@ -4618,7 +4618,7 @@ syRonanTick
     mov  eax, [this]
     add  eax, SYN.ronanw
     push eax
-    call _ronanCBTick@4
+    call ronanCBTick
     popad
     ret
 
@@ -4633,7 +4633,7 @@ syRonanProcess
     mov  eax, [this]
     add  eax, SYN.ronanw
     push eax
-    call    _ronanCBProcess@12
+    call    ronanCBProcess
     V2PerfLeave V2Perf_RONAN
     popad
     ret
@@ -4765,8 +4765,8 @@ endstruc
 
 section .text
 
-global _synthInit@12
-_synthInit@12:
+global synthInit
+synthInit:
         pushad
 
     mov ebp, [esp+36]
@@ -4787,7 +4787,7 @@ _synthInit@12:
         push eax
       lea  eax, [ebp + SYN.ronanw]
     push eax
-    call _ronanCBSetSR@8
+    call ronanCBSetSR
     popad
 %endif    
         
@@ -4858,8 +4858,8 @@ _synthInit@12:
 section .text
 
 
-global _synthRender@20
-_synthRender@20:
+global synthRender
+synthRender:
         pushad
 
     mov ebp, [esp+36]
@@ -5317,8 +5317,8 @@ spMTab dd ProcessNoteOff
 section .text
 
 
-global _synthProcessMIDI@8
-_synthProcessMIDI@8:
+global synthProcessMIDI
+synthProcessMIDI:
   pushad
   
   mov ebp, [esp+36]
@@ -5380,7 +5380,7 @@ ProcessNoteOff:
     pushad
   lea   eax, [ebp+SYN.ronanw]
   push	eax
-    call  _ronanCBNoteOff@4
+    call  ronanCBNoteOff
     popad
 %endif
     
@@ -5428,7 +5428,7 @@ ProcessNoteOn:
     pushad
   lea  eax, [ebp + SYN.ronanw]
   push eax
-    call  _ronanCBNoteOn@4
+    call  ronanCBNoteOn
     popad
 .noronan
 %endif
@@ -5600,7 +5600,7 @@ ProcessControlChange:
     push  eax
     lea   eax, [ebp + SYN.ronanw]
     push  eax
-    call  _ronanCBSetCtl@12
+    call  ronanCBSetCtl
     popad
 %endif
 
@@ -5654,7 +5654,7 @@ ProcessControlChange:
     pushad
   lea  eax, [ebp + SYN.ronanw]
     push eax
-    call  _ronanCBNoteOff@4
+    call  ronanCBNoteOff
     popad
 .noronanoff
 %endif
@@ -5743,7 +5743,7 @@ ProcessRealTime:
     push dword [ebp + SYN.samplerate]
     push dword [ebp + SYN.patchmap]
     push ebp
-    call _synthInit@12
+    call synthInit
     popad
 
 .noreset
@@ -5755,8 +5755,8 @@ ProcessRealTime:
 ; Noch wichtiger.
 
 
-global _synthSetGlobals@8
-_synthSetGlobals@8
+global synthSetGlobals
+synthSetGlobals
     pushad
     
     mov   ebp, [esp+36]
@@ -5808,8 +5808,8 @@ _synthSetGlobals@8
 ; ------------------------------------------------------------------------
 ; sampler init
 
-global _synthSetSampler@12
-_synthSetSampler@12:
+global synthSetSampler
+synthSetSampler:
 %if SAMPLER
   pushad
     mov   ebp, [esp+36]
@@ -5826,8 +5826,8 @@ _synthSetSampler@12:
 
 %ifdef VUMETER
 
-global _synthSetVUMode@8
-_synthSetVUMode@8:
+global synthSetVUMode
+synthSetVUMode:
   pushad
   mov ebp, [esp + 36]
   mov eax, [esp + 40]
@@ -5836,8 +5836,8 @@ _synthSetVUMode@8:
   ret 8
   
 
-global _synthGetChannelVU@16
-_synthGetChannelVU@16:
+global synthGetChannelVU
+synthGetChannelVU:
   pushad
   mov  ebp, [esp + 36]
   mov  ecx, [esp + 40]
@@ -5850,8 +5850,8 @@ _synthGetChannelVU@16:
   popad
   ret 16
 
-global _synthGetMainVU@12
-_synthGetMainVU@12:
+global synthGetMainVU
+synthGetMainVU:
   pushad
   mov  ebp, [esp + 36]
   mov  esi, [esp + 40]
@@ -5869,9 +5869,9 @@ _synthGetMainVU@12:
 ; ------------------------------------------------------------------------
 ; Debugkram
 
-global _synthGetPoly@8
+global synthGetPoly
 
-_synthGetPoly@8:
+synthGetPoly:
   pushad
     mov ecx, 17
     mov ebp, [esp + 36]
@@ -5895,9 +5895,9 @@ _synthGetPoly@8:
     ret 8
 
 
-global _synthGetPgm@8
+global synthGetPgm
 
-_synthGetPgm@8:
+synthGetPgm:
   pushad
     mov ebp, [esp + 36]
     mov edi, [esp + 40]
@@ -5913,19 +5913,19 @@ _synthGetPgm@8:
     popad
     ret 8
 
-global _synthGetSize@0
-_synthGetSize@0:
+global synthGetSize
+synthGetSize:
   mov eax, SYN.size
   ret
 
-global _synthGetFrameSize@4
-_synthGetFrameSize@4:
+global synthGetFrameSize
+synthGetFrameSize:
   mov eax, [SRcFrameSize]
   ret 4
   
 %ifdef RONAN
-global _synthGetSpeechMem@4
-_synthGetSpeechMem@4:
+global synthGetSpeechMem
+synthGetSpeechMem:
   mov eax, [esp+4]
   add eax, SYN.ronanw
   ret 4
