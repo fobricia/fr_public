@@ -6,6 +6,11 @@
 ;
 ;#####################################################################################
 
+%ifdef WIN32
+%define PUBLIC_FN(x,n) _ %+ x @ %+ n
+%else
+%define PUBLIC_FN(x,n) n
+%endif
 
 %define		POLY			64  							 ; maximum polyphony
 %define		LOWEST		39000000h					 ; out of 16bit range
@@ -4566,7 +4571,6 @@ storeChanValues:  ; ebx: channel, ebp: globals
 ;
 ;#####################################################################################
 
-
 ; FILTERBANK:
 
 %ifdef RONAN
@@ -4574,13 +4578,13 @@ storeChanValues:  ; ebx: channel, ebp: globals
 global _RONAN_
 _RONAN_
 
-extern ronanCBInit
-extern ronanCBTick
-extern ronanCBNoteOn
-extern ronanCBNoteOff
-extern ronanCBSetCtl
-extern ronanCBProcess
-extern ronanCBSetSR
+extern PUBLIC_FN(ronanCBInit,4)
+extern PUBLIC_FN(ronanCBTick,4)
+extern PUBLIC_FN(ronanCBNoteOn,4)
+extern PUBLIC_FN(ronanCBNoteOff,4)
+extern PUBLIC_FN(ronanCBSetCtl,12)
+extern PUBLIC_FN(ronanCBProcess,12)
+extern PUBLIC_FN(ronanCBSetSR,8)
 
 ; ebp: this
 syRonanInit
@@ -4588,7 +4592,7 @@ syRonanInit
     mov  eax, [this]
     add  eax, SYN.ronanw
     push eax
-    call ronanCBInit
+    call PUBLIC_FN(ronanCBInit,4)
     popad
     ret
 
@@ -4598,7 +4602,7 @@ syRonanNoteOn
     mov  eax, [this]
     add  eax, SYN.ronanw
     push eax
-    call ronanCBNoteOn
+    call PUBLIC_FN(ronanCBNoteOn,4)
     popad
     ret
 
@@ -4608,7 +4612,7 @@ syRonanNoteOff
     mov  eax, [this]
     add  eax, SYN.ronanw
     push eax
-    call ronanCBNoteOff
+    call PUBLIC_FN(ronanCBNoteOff,4)
     popad
     ret
 
@@ -4618,7 +4622,7 @@ syRonanTick
     mov  eax, [this]
     add  eax, SYN.ronanw
     push eax
-    call ronanCBTick
+    call PUBLIC_FN(ronanCBTick,4)
     popad
     ret
 
@@ -4633,7 +4637,7 @@ syRonanProcess
     mov  eax, [this]
     add  eax, SYN.ronanw
     push eax
-    call    ronanCBProcess
+    call    PUBLIC_FN(ronanCBProcess,12)
     V2PerfLeave V2Perf_RONAN
     popad
     ret
@@ -4765,8 +4769,8 @@ endstruc
 
 section .text
 
-global synthInit
-synthInit:
+global PUBLIC_FN(synthInit,12)
+PUBLIC_FN(synthInit,12):
         pushad
 
     mov ebp, [esp+36]
@@ -4787,7 +4791,7 @@ synthInit:
         push eax
       lea  eax, [ebp + SYN.ronanw]
     push eax
-    call ronanCBSetSR
+    call PUBLIC_FN(ronanCBSetSR,8)
     popad
 %endif    
         
@@ -4858,8 +4862,8 @@ synthInit:
 section .text
 
 
-global synthRender
-synthRender:
+global PUBLIC_FN(synthRender,20)
+PUBLIC_FN(synthRender,20):
         pushad
 
     mov ebp, [esp+36]
@@ -5317,8 +5321,8 @@ spMTab dd ProcessNoteOff
 section .text
 
 
-global synthProcessMIDI
-synthProcessMIDI:
+global PUBLIC_FN(synthProcessMIDI,8)
+PUBLIC_FN(synthProcessMIDI,8):
   pushad
   
   mov ebp, [esp+36]
@@ -5380,7 +5384,7 @@ ProcessNoteOff:
     pushad
   lea   eax, [ebp+SYN.ronanw]
   push	eax
-    call  ronanCBNoteOff
+    call  PUBLIC_FN(ronanCBNoteOff,4)
     popad
 %endif
     
@@ -5428,7 +5432,7 @@ ProcessNoteOn:
     pushad
   lea  eax, [ebp + SYN.ronanw]
   push eax
-    call  ronanCBNoteOn
+    call  PUBLIC_FN(ronanCBNoteOn,4)
     popad
 .noronan
 %endif
@@ -5600,7 +5604,7 @@ ProcessControlChange:
     push  eax
     lea   eax, [ebp + SYN.ronanw]
     push  eax
-    call  ronanCBSetCtl
+    call  PUBLIC_FN(ronanCBSetCtl,12)
     popad
 %endif
 
@@ -5654,7 +5658,7 @@ ProcessControlChange:
     pushad
   lea  eax, [ebp + SYN.ronanw]
     push eax
-    call  ronanCBNoteOff
+    call  PUBLIC_FN(ronanCBNoteOff,4)
     popad
 .noronanoff
 %endif
@@ -5743,7 +5747,7 @@ ProcessRealTime:
     push dword [ebp + SYN.samplerate]
     push dword [ebp + SYN.patchmap]
     push ebp
-    call synthInit
+    call PUBLIC_FN(synthInit,12)
     popad
 
 .noreset
@@ -5755,8 +5759,8 @@ ProcessRealTime:
 ; Noch wichtiger.
 
 
-global synthSetGlobals
-synthSetGlobals
+global PUBLIC_FN(synthSetGlobals,8)
+PUBLIC_FN(synthSetGlobals,8)
     pushad
     
     mov   ebp, [esp+36]
@@ -5808,8 +5812,8 @@ synthSetGlobals
 ; ------------------------------------------------------------------------
 ; sampler init
 
-global synthSetSampler
-synthSetSampler:
+global PUBLIC_FN(synthSetSampler,12)
+PUBLIC_FN(synthSetSampler,12):
 %if SAMPLER
   pushad
     mov   ebp, [esp+36]
@@ -5826,8 +5830,8 @@ synthSetSampler:
 
 %ifdef VUMETER
 
-global synthSetVUMode
-synthSetVUMode:
+global PUBLIC_FN(synthSetVUMode,8)
+PUBLIC_FN(synthSetVUMode,8):
   pushad
   mov ebp, [esp + 36]
   mov eax, [esp + 40]
@@ -5836,8 +5840,8 @@ synthSetVUMode:
   ret 8
   
 
-global synthGetChannelVU
-synthGetChannelVU:
+global PUBLIC_FN(synthGetChannelVU,16)
+PUBLIC_FN(synthGetChannelVU,16):
   pushad
   mov  ebp, [esp + 36]
   mov  ecx, [esp + 40]
@@ -5850,8 +5854,8 @@ synthGetChannelVU:
   popad
   ret 16
 
-global synthGetMainVU
-synthGetMainVU:
+global PUBLIC_FN(synthGetMainVU,12)
+PUBLIC_FN(synthGetMainVU,12):
   pushad
   mov  ebp, [esp + 36]
   mov  esi, [esp + 40]
@@ -5869,9 +5873,9 @@ synthGetMainVU:
 ; ------------------------------------------------------------------------
 ; Debugkram
 
-global synthGetPoly
+global PUBLIC_FN(synthGetPoly,8)
 
-synthGetPoly:
+PUBLIC_FN(synthGetPoly,8):
   pushad
     mov ecx, 17
     mov ebp, [esp + 36]
@@ -5895,9 +5899,9 @@ synthGetPoly:
     ret 8
 
 
-global synthGetPgm
+global PUBLIC_FN(synthGetPgm,8)
 
-synthGetPgm:
+PUBLIC_FN(synthGetPgm,8):
   pushad
     mov ebp, [esp + 36]
     mov edi, [esp + 40]
@@ -5913,19 +5917,19 @@ synthGetPgm:
     popad
     ret 8
 
-global synthGetSize
-synthGetSize:
+global PUBLIC_FN(synthGetSize,0)
+PUBLIC_FN(synthGetSize,0):
   mov eax, SYN.size
   ret
 
-global synthGetFrameSize
-synthGetFrameSize:
+global PUBLIC_FN(synthGetFrameSize,4)
+PUBLIC_FN(synthGetFrameSize,4):
   mov eax, [SRcFrameSize]
   ret 4
   
 %ifdef RONAN
-global synthGetSpeechMem
-synthGetSpeechMem:
+global PUBLIC_FN(synthGetSpeechMem,4)
+PUBLIC_FN(synthGetSpeechMem,4):
   mov eax, [esp+4]
   add eax, SYN.ronanw
   ret 4
