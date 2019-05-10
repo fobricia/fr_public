@@ -232,7 +232,7 @@ void V2MPlayer::Tick()
 	}
 	UPDATENT3(m_state.gnr, m_state.gnt, m_state.gptr+m_state.gnr, m_base.gdnum);
 
-	for (sInt ch=0; ch<16; ch++) 
+	for (sInt ch=0; ch<16; ch++)
 	{
 		V2MBase::Channel &bc=m_base.chan[ch];
 		PlayerState::Channel &sc=m_state.chan[ch];
@@ -294,7 +294,7 @@ void V2MPlayer::Tick()
 	*mptr++=0xfd;
 
 	synthProcessMIDI(m_synth,m_midibuf);
-	
+
 	if (m_state.nexttime==(sU32)-1) m_state.state=PlayerState::STOPPED;
 }
 
@@ -304,7 +304,7 @@ sBool V2MPlayer::Open(const void *a_v2mptr, sU32 a_samplerate)
 ///////////////////////////////////////////////////////////////
 {
 	if (m_base.valid) Close();
-	
+
 	m_samplerate=a_samplerate;
 
 	if (!InitBase(a_v2mptr)) return sFALSE;
@@ -348,6 +348,13 @@ void V2MPlayer::Play(sU32 a_time)
 		idiv ebx
 		mov  [destsmpl], eax
 	}
+#elif defined(__i386__)
+	asm volatile("imul %%ebx\n"
+				 "movl %[tpc], %%ebx\n"
+				 "idiv %%ebx\n"
+				 :"=a"(destsmpl)
+				 :"a"(a_time),"b"(m_samplerate),[tpc]"m"(m_tpc)
+				 :"edx");
 #else
 	destsmpl = m_samplerate * a_time / m_tpc;
 #endif
@@ -394,6 +401,13 @@ void V2MPlayer::Stop(sU32 a_fadetime)
 			idiv ebx
 			mov  [ftsmpls], eax
 		}
+#elif defined(__i386__)
+		asm volatile("imul %%ebx\n"
+					 "movl %[tpc], %%ebx\n"
+					 "idiv %%ebx\n"
+					 :"=a"(ftsmpls)
+					 :"a"(a_fadetime),"b"(m_samplerate),[tpc]"m"(m_tpc)
+					 :"edx");
 #else
 		ftsmpls = a_fadetime * m_samplerate / m_tpc;
 #endif
@@ -448,8 +462,14 @@ void V2MPlayer::Render(sF32 *a_buffer, sU32 a_len, sBool a_add)
 			  xor eax, eax
 			  rep stosd
 		  }
+#elif defined(__i386__)
+		asm volatile("xorl %%eax, %%eax\n"
+					 "rep stosl\n"
+					 :
+					 :"c"(a_len>>1),"D"(a_buffer)
+					 :"eax");
 #else
-		memset(a_buffer, 0, a_len<<1);
+		V2_memset(a_buffer, 0, a_len<<1);
 #endif
     }
 	}
@@ -504,7 +524,7 @@ sU32 V2MPlayer::CalcPositions(sS32 **a_dest)
 	sU32 posnum=0;
 	sU32 ttime, td, this32;
 	sF64 curtimer=0;
-	
+
 	while (gnr<m_base.gdnum)
 	{
 		ttime=lastevtime+(gp[2*m_base.gdnum]<<16)+(gp[m_base.gdnum]<<8)+gp[0];
