@@ -21,13 +21,13 @@ global %1
 %endif
 
 %ifdef WIN32
-%define SECT_BSS(name) section .bss
-%define SECT_DATA(name) section .data
-%define SECT_TEXT(name) section .text
+%define SECT_BSS(name) section .bss align=1
+%define SECT_DATA(name) section .data align=1
+%define SECT_TEXT(name) section .text align=1
 %else
-%define SECT_BSS(n) section .bss. %+ n nobits alloc noexec write
-%define SECT_DATA(n) section .data. %+ n progbits alloc noexec write
-%define SECT_TEXT(n) section .text. %+ n progbits alloc exec nowrite
+%define SECT_BSS(n) section .bss. %+ n nobits alloc noexec write align=1
+%define SECT_DATA(n) section .data. %+ n progbits alloc noexec write align=1
+%define SECT_TEXT(n) section .text. %+ n progbits alloc exec nowrite align=1
 %endif
 
 %define		POLY			64  							 ; maximum polyphony
