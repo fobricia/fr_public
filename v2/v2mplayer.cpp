@@ -31,7 +31,7 @@ namespace
   //////////////////////////////////////////////////////////////////////////////////////////////////////
 	{
 		// performs 64bit (nexttime-time)*usecs/td2 and a 32.32bit addition to smpldelta:smplrem
-#ifdef WIN32
+#ifdef _WIN32
 		__asm {
 			mov eax, [nexttime]
 			sub eax, [time]
@@ -337,7 +337,7 @@ void V2MPlayer::Play(sU32 a_time)
 
 	m_base.valid=sFALSE;
 	sU32 destsmpl, cursmpl=0;
-#ifdef WIN32
+#ifdef _WIN32
 	__asm
 	{
 		mov  ecx, this
@@ -390,7 +390,7 @@ void V2MPlayer::Stop(sU32 a_fadetime)
 	if (a_fadetime)
 	{
 		sU32 ftsmpls;
-#ifdef WIN32
+#ifdef _WIN32
 		__asm
 		{
 			mov  ecx, this
@@ -454,7 +454,7 @@ void V2MPlayer::Render(sF32 *a_buffer, sU32 a_len, sBool a_add)
 	{
     if (!a_add)
     {
-#ifdef WIN32
+#ifdef _WIN32
 		  __asm {
 			  mov edi, [a_buffer]
 			  mov ecx, [a_len]
