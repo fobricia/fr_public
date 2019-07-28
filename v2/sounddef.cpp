@@ -9,8 +9,16 @@
 #include "sounddef.h"
 #include "v2mconv.h"
 
+#ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#define V2_memset ZeroMemory
+#else
+#ifndef V2_memset
+#include <string.h>
+#define V2_memset(p,s) memset(p,0,s)
+#endif
+#endif
 
 // lr: in case you miss the arrays: look in sounddef.h
 
@@ -112,8 +120,7 @@ void sdInit()
 		p+=v2gtopics[i].no;
 	}
 
-#ifdef RONAN	
-	ZeroMemory(speech,64*256);
+	V2_memset(speech,64*256);
 	for (int i=0; i<64; i++)
 		speechptrs[i]=speech[i];
 
@@ -216,7 +223,7 @@ static sBool sdLoadBank(file &in)
 
 
 #ifdef RONAN
-	ZeroMemory(speech,64*256);
+	V2_memset(speech,64*256);
 #endif
 
 	if (!in.eof())
@@ -232,7 +239,9 @@ static sBool sdLoadBank(file &in)
 		}
 #else
 #ifndef SINGLECHN
+#ifdef _WIN32
 		if (sml) MessageBox(0,"Warning: Not loading speech synth texts\nIf you overwrite the file later, the texts will be lost!","Farbrausch V2",MB_ICONEXCLAMATION);
+#endif
 #endif
 		in.seekcur(sml);
 #endif

@@ -58,7 +58,12 @@ const int v2ntopics = sizeof(v2topics)/sizeof(V2TOPIC);
 //
 ////////////////////////////////////////////
 
-__declspec(selectany) const char *v2sources[] = {
+#ifdef _MSC_VER
+__declspec(selectany)
+#else
+__attribute__((__weak__))
+#endif
+const char *v2sources[] = {
 	"Velocity",
 	"Modulation",
 	"Breath",
