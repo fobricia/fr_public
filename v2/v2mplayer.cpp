@@ -9,6 +9,8 @@
 /*************************************************************************************/
 
 
+#include <stdint.h>
+
 #include "v2mplayer.h"
 #include "synth.h"
 /*#include "libv2.h"*/
@@ -31,7 +33,7 @@ namespace
   //////////////////////////////////////////////////////////////////////////////////////////////////////
 	{
 		// performs 64bit (nexttime-time)*usecs/td2 and a 32.32bit addition to smpldelta:smplrem
-#ifdef _WIN32
+#ifdef _MSC_VER
 		__asm {
 			mov eax, [nexttime]
 			sub eax, [time]
@@ -45,7 +47,7 @@ namespace
 			mov ecx, [smpldelta]
 			mov [ecx], eax
 		}
-#else
+#elif defined(__i386__)
 		asm volatile("movl %[nexttime], %%eax\n"
 					 "subl %[time], %%eax\n"
 					 "movl %[usecs], %%ebx\n"
@@ -62,6 +64,13 @@ namespace
 					  [td2]"m"(td2),[smplrem]"m"(smplrem),
 					  [smpldelta]"m"(smpldelta)
 					 :"eax","ebx","ecx","edx");
+#else
+		uint64_t t = ((nexttime - time) * (uint64_t)usecs) / td2;
+		uint64_t r = *smplrem;
+
+		*smplrem   += (t>>32);
+		*smpldelta += (t & 0xFFFFFEFFF);
+		if (*smplrem < r) ++(*smpldelta);
 #endif
 	}
 }
@@ -337,7 +346,7 @@ void V2MPlayer::Play(sU32 a_time)
 
 	m_base.valid=sFALSE;
 	sU32 destsmpl, cursmpl=0;
-#ifdef _WIN32
+#ifdef _MSC_VER
 	__asm
 	{
 		mov  ecx, this
@@ -356,7 +365,7 @@ void V2MPlayer::Play(sU32 a_time)
 				 :"a"(a_time),"b"(m_samplerate),[tpc]"m"(m_tpc)
 				 :"edx");
 #else
-	destsmpl = m_samplerate * a_time / m_tpc;
+	destsmpl = m_samplerate * (uint64_t)a_time / m_tpc;
 #endif
 
 	m_state.state=PlayerState::PLAYING;
@@ -390,7 +399,7 @@ void V2MPlayer::Stop(sU32 a_fadetime)
 	if (a_fadetime)
 	{
 		sU32 ftsmpls;
-#ifdef _WIN32
+#ifdef _MSC_VER
 		__asm
 		{
 			mov  ecx, this
@@ -409,7 +418,7 @@ void V2MPlayer::Stop(sU32 a_fadetime)
 					 :"a"(a_fadetime),"b"(m_samplerate),[tpc]"m"(m_tpc)
 					 :"edx");
 #else
-		ftsmpls = a_fadetime * m_samplerate / m_tpc;
+		ftsmpls = (uint64_t)a_fadetime * m_samplerate / m_tpc;
 #endif
 		m_fadedelta=m_fadeval/ftsmpls;
 	}
@@ -454,7 +463,7 @@ void V2MPlayer::Render(sF32 *a_buffer, sU32 a_len, sBool a_add)
 	{
     if (!a_add)
     {
-#ifdef _WIN32
+#ifdef _MSC_VER
 		  __asm {
 			  mov edi, [a_buffer]
 			  mov ecx, [a_len]
@@ -469,7 +478,7 @@ void V2MPlayer::Render(sF32 *a_buffer, sU32 a_len, sBool a_add)
 					 :"c"(a_len>>1),"D"(a_buffer)
 					 :"eax");
 #else
-		V2_memset(a_buffer, 0, a_len<<1);
+		V2_memset(a_buffer, 0, sizeof(a_buffer[0])*a_len*2);
 #endif
     }
 	}

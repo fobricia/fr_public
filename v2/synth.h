@@ -2,7 +2,7 @@
 #ifndef _SYNTH_H_
 #define _SYNTH_H_
 
-#ifndef _WIN32
+#ifndef _MSC_VER
 #define __stdcall
 #endif
 

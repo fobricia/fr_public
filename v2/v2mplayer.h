@@ -11,7 +11,7 @@
 #ifndef V2MPLAYER_H_
 #define V2MPLAYER_H_
 
-#ifndef _WIN32
+#ifndef _MSC_VER
 #define __stdcall
 #include <stdint.h>
 #endif
@@ -33,7 +33,7 @@ typedef char              sChar;
 typedef signed   char     sS8;
 typedef signed   short    sS16;
 typedef signed   long     sS32;
-#ifdef _WIN32
+#ifdef _MSC_VER
 typedef signed   __int64  sS64;
 #else
 typedef int64_t sS64;
@@ -42,7 +42,7 @@ typedef int64_t sS64;
 typedef unsigned char     sU8;
 typedef unsigned short    sU16;
 typedef unsigned long     sU32;
-#ifdef _WIN32
+#ifdef _MSC_VER
 typedef unsigned __int64  sU64;
 #else
 typedef uint64_t sU64;
