@@ -9,7 +9,11 @@
 
 //#pragma intrinsic (atan, cos, fabs)
 
+#if !defined(_MSC_VER) && !defined(__stdcall)
+#define __stdcall
+#endif
 
+#ifdef _MSC_VER
 static sInt sFtol (const float f)
 {
   __asm 
@@ -96,6 +100,11 @@ static sF64 sFExp(sF64 f)
 
 	return f;
 }
+#else
+#define sFtol(a) ((sInt)(a))
+#define sFPow(a, b) powf(a, b)
+#define sFExp(a) expf(a)
+#endif
 
 #ifndef sCopyMem
 #define sCopyMem memcpy
@@ -576,7 +585,7 @@ extern "C" void __stdcall ronanCBProcess(syWRonan *wsptr,sF32 *buf, sU32 len)
 
 }
 
-extern "C" extern void* __stdcall synthGetSpeechMem(void *a_pthis);
+extern "C" /*extern*/ void* __stdcall synthGetSpeechMem(void *a_pthis);
 
 extern "C" void __stdcall synthSetLyrics(void *a_pthis,const char **a_ptr)
 {

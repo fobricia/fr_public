@@ -5,6 +5,10 @@
 #include <string.h>
 #include <stdlib.h>
 
+#if !defined(_MSC_VER) && !defined(__stdcall)
+#define __stdcall
+#endif
+
 // TODO:
 // - VU meters?
 
@@ -243,6 +247,8 @@ static inline sF32 lerp(sF32 a, sF32 b, sF32 t)
 // DEBUG
 #include <stdarg.h>
 #include <stdio.h>
+
+#ifdef _WIN32
 extern "C" void __stdcall OutputDebugStringA(const char *what);
 static void dprintf(const char *fmt, ...)
 {
@@ -253,6 +259,7 @@ static void dprintf(const char *fmt, ...)
   va_end(arg);
   OutputDebugStringA(buf);
 }
+#endif
 
 // --------------------------------------------------------------------------
 // Building blocks

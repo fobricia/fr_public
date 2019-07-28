@@ -8,7 +8,9 @@
 
 #define printf2
 
+#ifdef _MSC_VER
 #pragma intrinsic (pow, sqrt, log)
+#endif
 
 extern const char * const v2mconv_errors[] =
 {
@@ -53,7 +55,9 @@ static struct _ssbase {
 
 
 extern "C" void * memset(void *, int, size_t);
+#ifdef _MSC_VER
 #pragma intrinsic (memset)
+#endif
 
 static void readfile(const unsigned char *inptr, const int inlen)
 {

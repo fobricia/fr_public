@@ -11,18 +11,18 @@ enum V2CTLTYPES { VCTL_SKIP, VCTL_SLIDER, VCTL_MB, };
 
 typedef struct {
 	int		no;
-	char  *name;
-	char	*name2;
+	const char  *name;
+	const char	*name2;
 } V2TOPIC;
 
 typedef struct {
 
 	int   version;
-	char  *name;
+	const char  *name;
 	V2CTLTYPES ctltype;
 	int	  offset, min, max;
 	int   isdest;
-	char  *ctlstr;
+	const char  *ctlstr;
 } V2PARAM;
 
 ////////////////////////////////////////////
@@ -58,7 +58,12 @@ const int v2ntopics = sizeof(v2topics)/sizeof(V2TOPIC);
 //
 ////////////////////////////////////////////
 
-__declspec(selectany) const char *v2sources[] = {
+#ifdef _MSC_VER
+__declspec(selectany)
+#else
+__attribute__((__weak__))
+#endif
+const char *v2sources[] = {
 	"Velocity",
 	"Modulation",
 	"Breath",

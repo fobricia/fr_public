@@ -2,8 +2,14 @@
 #ifndef _SYNTH_H_
 #define _SYNTH_H_
 
+#ifndef _MSC_VER
+#define __stdcall
+#endif
+
+#ifdef __cplusplus
 extern "C"
 {
+#endif
   extern unsigned int __stdcall synthGetSize();
   
 	extern void __stdcall synthInit(void *pthis, const void *patchmap, int samplerate=44100);
@@ -29,6 +35,8 @@ extern "C"
 	extern void __stdcall synthSetLyrics(void *pthis, const char **ptr);
 #endif
 
+#ifdef __cplusplus
 }
+#endif
 
 #endif
