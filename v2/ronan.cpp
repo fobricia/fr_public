@@ -585,7 +585,7 @@ extern "C" void __stdcall ronanCBProcess(syWRonan *wsptr,sF32 *buf, sU32 len)
 
 }
 
-extern "C" extern void* __stdcall synthGetSpeechMem(void *a_pthis);
+extern "C" /*extern*/ void* __stdcall synthGetSpeechMem(void *a_pthis);
 
 extern "C" void __stdcall synthSetLyrics(void *a_pthis,const char **a_ptr)
 {

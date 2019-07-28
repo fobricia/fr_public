@@ -1,7 +1,9 @@
 //#include "stdafx.h"
 
 #include "types.h"
+#if defined(_WIN32) /*&& defined(_MSC_VER)*/
 #include "tool/file.h"
+#endif
 
 #include <string.h>
 #include <stdio.h>
@@ -120,6 +122,7 @@ void sdInit()
 		p+=v2gtopics[i].no;
 	}
 
+#ifdef RONAN
 	V2_memset(speech,64*256);
 	for (int i=0; i<64; i++)
 		speechptrs[i]=speech[i];
@@ -137,7 +140,7 @@ void sdClose()
 }
 
 
-
+#ifdef _WIN32
 static sBool sdLoadPatch(file &in, sInt pn, sInt fver=-1)
 {
 	if (fver==-1)
@@ -328,7 +331,7 @@ sBool sdImportV2MPatches(file &in, const char *prefix)
 	
 	return np?1:0;
 }
-
+#endif
 
 void sdCopyPatch()
 {
