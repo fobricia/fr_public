@@ -13,7 +13,7 @@ global _%1@%2
 _%1@%2:
 %endmacro
 %else
-%define PUBLIC_FN(x,n) n
+%define PUBLIC_FN(x,n) x
 %macro export_fn 2
 global %1
 %1:
@@ -4621,6 +4621,9 @@ syRonanInit
     add  eax, SYN.ronanw
     push eax
     call PUBLIC_FN(ronanCBInit,4)
+%ifndef WIN32
+    pop eax
+%endif
     popad
     ret
 
@@ -4631,6 +4634,10 @@ syRonanNoteOn
     add  eax, SYN.ronanw
     push eax
     call PUBLIC_FN(ronanCBNoteOn,4)
+%ifndef WIN32
+    ; linux doesn't know about stdcall, so we have to emulate cdecl
+    pop eax
+%endif
     popad
     ret
 
@@ -4641,6 +4648,9 @@ syRonanNoteOff
     add  eax, SYN.ronanw
     push eax
     call PUBLIC_FN(ronanCBNoteOff,4)
+%ifndef WIN32
+    pop eax
+%endif
     popad
     ret
 
@@ -4651,6 +4661,9 @@ syRonanTick
     add  eax, SYN.ronanw
     push eax
     call PUBLIC_FN(ronanCBTick,4)
+%ifndef WIN32
+    pop eax
+%endif
     popad
     ret
 
@@ -4666,6 +4679,11 @@ syRonanProcess
     add  eax, SYN.ronanw
     push eax
     call    PUBLIC_FN(ronanCBProcess,12)
+%ifndef WIN32
+    pop eax
+    pop esi
+    pop ecx
+%endif
     V2PerfLeave V2Perf_RONAN
     popad
     ret
@@ -4812,20 +4830,24 @@ export_fn synthInit,12
         mov [ebp + SYN.samplerate], eax
         call calcNewSampleRate
 
-%ifdef RONAN		
+%ifdef RONAN
     pushad
         mov eax, [ebp + SYN.samplerate]
         push eax
       lea  eax, [ebp + SYN.ronanw]
     push eax
     call PUBLIC_FN(ronanCBSetSR,8)
+%ifndef WIN32
+    pop eax
+    pop eax
+%endif
     popad
-%endif    
+%endif
         
         mov eax, [esp + 40]
         mov [ebp + SYN.patchmap], eax
 
-        mov cl, POLY
+        mov ecx, POLY;mov cl, POLY
         xor eax, eax
         not eax
         lea edi, [ebp + SYN.chanmap]
@@ -5410,6 +5432,9 @@ ProcessNoteOff:
   lea   eax, [ebp+SYN.ronanw]
   push	eax
     call  PUBLIC_FN(ronanCBNoteOff,4)
+%ifndef WIN32
+    pop eax
+%endif
     popad
 %endif
     
@@ -5460,6 +5485,9 @@ ProcessNoteOn:
   lea  eax, [ebp + SYN.ronanw]
   push eax
     call  PUBLIC_FN(ronanCBNoteOn,4)
+%ifndef WIN32
+    pop eax
+%endif
     popad
 .noronan
 %endif
@@ -5634,6 +5662,11 @@ ProcessControlChange:
     lea   eax, [ebp + SYN.ronanw]
     push  eax
     call  PUBLIC_FN(ronanCBSetCtl,12)
+%ifndef WIN32
+    pop eax
+    pop eax
+    pop ebx
+%endif
     popad
 %endif
 
@@ -5688,6 +5721,9 @@ ProcessControlChange:
   lea  eax, [ebp + SYN.ronanw]
     push eax
     call  PUBLIC_FN(ronanCBNoteOff,4)
+%ifndef WIN32
+    pop eax
+%endif
     popad
 .noronanoff
 %endif
